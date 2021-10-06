@@ -85,8 +85,7 @@ public struct food
 }
 public class game_state
 {
-	public game_window window { get; private set; }
-	public System.IntPtr renderer { get; private set; }
+
 	public game_clock clock { get; private set; }
 
 	public Game_Run_State run_State;
@@ -105,38 +104,29 @@ public class game_state
 	{
 		play_field = new Game_Field_Type[max_play_field_size, max_play_field_size];
 		play_field_size = max_play_field_size;
-		window = new game_window(900, 900);
-		renderer = SDL.SDL_CreateRenderer(window.window_handle,
-											   -1,
-											   SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
-											   SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
 
-		if (renderer == IntPtr.Zero)
-		{
-			Console.WriteLine($"There was an issue creating the renderer. {SDL.SDL_GetError()}");
-		}
 
 		clock = new game_clock();
 		rand = new Random();
 		apple = new food { type = Game_Field_Type.Apple };
 		choco = new food { type = Game_Field_Type.Choco };
-    }
+	}
 
-    private void place_on_random_position(ref food food)
-    {
-        if (play_field[food.pos_y, food.pos_x] == Game_Field_Type.Grass)
-        {
-            do
-            {
-                food.pos_x = rand.Next(0, 30);
-                food.pos_y = rand.Next(0, 30);
-            } while (play_field[food.pos_y, food.pos_x] != Game_Field_Type.Grass);
+	private void place_on_random_position(ref food food)
+	{
+		if (play_field[food.pos_y, food.pos_x] == Game_Field_Type.Grass)
+		{
+			do
+			{
+				food.pos_x = rand.Next(0, 30);
+				food.pos_y = rand.Next(0, 30);
+			} while (play_field[food.pos_y, food.pos_x] != Game_Field_Type.Grass);
 
-            play_field[food.pos_y, food.pos_x] = food.type;
-        }
-    }
+			play_field[food.pos_y, food.pos_x] = food.type;
+		}
+	}
 
-    public void generate_random_food()
+	public void generate_random_food()
     {
         place_on_random_position(ref apple);
 		place_on_random_position(ref choco);
@@ -225,63 +215,71 @@ public class snake
 		}
 
 		return output;
-	}
+    }
 
-	public void extend()
-	{
-		if (snakeSize + 1 >= snake_max_size)
-		{
-			return; //TODO: Log or error
-		}
+    public void extend()
+    {
+        if (snakeSize + 1 >= snake_max_size)
+        {
+            return; //TODO: Log or error
+        }
 
-		float last_pos_x = body[snakeSize - 1].pos_x;
-		float last_pos_y = body[snakeSize - 1].pos_y;
+        float last_pos_x = body[snakeSize - 1].pos_x;
+        float last_pos_y = body[snakeSize - 1].pos_y;
 
-		if (snakeSize > 1)
-		{
-			float new_pos_x = last_pos_x - body[snakeSize - 2].pos_x;
-			float new_pos_y = last_pos_y - body[snakeSize - 2].pos_y;
+        if (snakeSize > 1)
+        {
+            float new_pos_x = last_pos_x - body[snakeSize - 2].pos_x;
+            float new_pos_y = last_pos_y - body[snakeSize - 2].pos_y;
 
-			if (new_pos_x == 0)
-			{
-				if (new_pos_y > 0)
-				{
-					body[snakeSize].pos_x = last_pos_x;
-					body[snakeSize].pos_y = last_pos_y + 1;
-					snakeSize++;
-				}
-				else
-				{
-					body[snakeSize].pos_x = last_pos_x;
-					body[snakeSize].pos_y = last_pos_y - 1;
-					snakeSize++;
-				}
-			}
-			else
-			{
-				if (new_pos_x > 0)
-				{
-					body[snakeSize].pos_x = last_pos_x + 1;
-					body[snakeSize].pos_y = last_pos_y;
-					snakeSize++;
-				}
-				else
-				{
-					body[snakeSize].pos_x = last_pos_x - 1;
-					body[snakeSize].pos_y = last_pos_y;
-					snakeSize++;
-				}
-			}
-		}
-		else
-		{
-			body[snakeSize].pos_x = last_pos_x - vel_x;
-			body[snakeSize].pos_y = last_pos_y - vel_y;
-			snakeSize++;
-		}
-	}
+            if (new_pos_x == 0)
+            {
+                if (new_pos_y > 0)
+                {
+                    body[snakeSize].pos_x = last_pos_x;
+                    body[snakeSize].pos_y = last_pos_y + 1;
+                    snakeSize++;
+                }
+                else
+                {
+                    body[snakeSize].pos_x = last_pos_x;
+                    body[snakeSize].pos_y = last_pos_y - 1;
+                    snakeSize++;
+                }
+            }
+            else
+            {
+                if (new_pos_x > 0)
+                {
+                    body[snakeSize].pos_x = last_pos_x + 1;
+                    body[snakeSize].pos_y = last_pos_y;
+                    snakeSize++;
+                }
+                else
+                {
+                    body[snakeSize].pos_x = last_pos_x - 1;
+                    body[snakeSize].pos_y = last_pos_y;
+                    snakeSize++;
+                }
+            }
+        }
+        else
+        {
+            body[snakeSize].pos_x = last_pos_x - vel_x;
+            body[snakeSize].pos_y = last_pos_y - vel_y;
+            snakeSize++;
+        }
 
-	public void move(float dT_s, float speed)
+    }
+
+	public void shrink()
+    {
+		if (snakeSize >= 1)
+        {
+			snakeSize--;
+        }
+    }
+    public void move(float dT_s, float speed)
 	{
 		float new_head_pos_x = body[0].pos_x + vel_x * dT_s * speed;
 		float new_head_pos_y = body[0].pos_y + vel_y * dT_s * speed;
@@ -305,10 +303,55 @@ public class snake
 	}
 }
 
-
-class Game
+public class RenderContext
 {
-	static void gameplay_setup(game_state state, snake snake)
+	public game_window window { get; private set; }
+	public System.IntPtr ctx { get; private set; }
+
+	public RenderContext(int w, int h)
+	{
+		window = new game_window(w, h);
+		ctx = SDL.SDL_CreateRenderer(window.window_handle,
+											   -1,
+											   SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
+											   SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
+
+		if (ctx == IntPtr.Zero)
+		{
+			Console.WriteLine($"There was an issue creating the renderer. {SDL.SDL_GetError()}");
+		}
+
+		if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) == 0)
+		{
+			Console.WriteLine($"There was an issue initilizing SDL2_Image {SDL_image.IMG_GetError()}");
+		}
+	}
+	public IntPtr texture_load(string filename)
+	{
+		IntPtr texture;
+		texture = SDL_image.IMG_LoadTexture(ctx, filename);
+
+		return texture;
+	}
+}
+
+public class Game
+{
+	snake snake;
+	public game_state state { get; private set; }
+	RenderContext renderer;
+	IntPtr texture_atlas;
+	public Game()
+	{
+		renderer = new RenderContext(900, 900);
+		snake = new snake(512);
+		state = new game_state(30);
+		state.clock.target_fps = 60;
+		texture_atlas = renderer.texture_load("D:/Moje projekty/SnakeC#/SnakeCis/SnakeCis/textures/snake_atlas.png");
+		gameplay_setup();
+	}
+
+	public void gameplay_setup()
 	{
 		snake.reset_size();
 		snake.body[0].pos_x = 15;
@@ -319,7 +362,7 @@ class Game
 		state.game_speed = 14;
 		state.run_State = Game_Run_State.Pause;
 	}
-	static void input_process(game_state state, snake snake)
+	public void input_process()
 	{
 		body_element snake_head_dir = snake.check_snake_head_to_body_direction();
 
@@ -330,14 +373,14 @@ class Game
 		uint buttons = SDL.SDL_GetMouseState(out int mouse_x, out int mouse_y);
 		if ((buttons & SDL.SDL_BUTTON_LMASK) != 0)
 		{
-			int tile_size = state.window.width / state.play_field_size;
+			int tile_size = renderer.window.width / state.play_field_size;
 			int tile_x = mouse_x / tile_size;
 			int tile_y = mouse_y / tile_size;
 			state.play_field[tile_y, tile_x] = Game_Field_Type.Wall;
 		}
 		if ((buttons & SDL.SDL_BUTTON_RMASK) != 0)
 		{
-			int tile_size = state.window.width / state.play_field_size;
+			int tile_size = renderer.window.width / state.play_field_size;
 			int tile_x = mouse_x / tile_size;
 			int tile_y = mouse_y / tile_size;
 			state.play_field[tile_y, tile_x] = Game_Field_Type.Grass;
@@ -409,22 +452,33 @@ class Game
 				break;
 		}
 	}
-
-	static void update(game_state state, snake snake)
+	public void update()
 	{
 		snake.move(state.clock.delta_time_s, state.game_speed);
 		state.generate_random_food();
 
-		// kolizja jablka i wiekszy pyton
-		if ((int)snake.body[0].pos_x == state.apple.pos_x && (int)snake.body[0].pos_y == state.apple.pos_y)
-		{
-			snake.extend();
-			state.play_field[state.apple.pos_y, state.apple.pos_x] = Game_Field_Type.Grass;
-			state.score++;
+        // kolizja jablka i wiekszy pyton
+        if ((int)snake.body[0].pos_x == state.apple.pos_x && (int)snake.body[0].pos_y == state.apple.pos_y)
+        {
+            snake.extend();
+            state.play_field[state.apple.pos_y, state.apple.pos_x] = Game_Field_Type.Grass;
+            state.score++;
+        }
+        //kolizja z ciastkiem
+        if ((int)snake.body[0].pos_x == state.choco.pos_x && (int)snake.body[0].pos_y == state.choco.pos_y)
+        {
+            snake.shrink();
+            state.play_field[state.choco.pos_y, state.choco.pos_x] = Game_Field_Type.Grass;
+            state.score--;
+        }
+		//cukrzyca
+		if(snake.snakeSize <= 0)
+        {
+			state.run_State = Game_Run_State.Restart;
 		}
 
-		//kolizja z koncem mapy
-		if (snake.body[0].pos_x <= 0 || snake.body[0].pos_x >= state.play_field_size)
+        //kolizja z koncem mapy
+        if (snake.body[0].pos_x <= 0 || snake.body[0].pos_x >= state.play_field_size)
 		{
 			state.run_State = Game_Run_State.Restart;
 		}
@@ -436,124 +490,134 @@ class Game
 		else if (state.play_field[(int)snake.body[0].pos_y, (int)snake.body[0].pos_x] == Game_Field_Type.Wall)
 		{
 			state.run_State = Game_Run_State.Restart;
-		}
+        }
 
-		//kolizja z cialem
-		for (int i = 1; i < snake.snakeSize; i++)
-		{
-			if ((int)snake.body[0].pos_x == (int)snake.body[i].pos_x && (int)snake.body[0].pos_y == (int)snake.body[i].pos_y)
-			{
-				state.run_State = Game_Run_State.Restart;
-			}
-		}
-	}
+        //kolizja z cialem
+        for (int i = 1; i < snake.snakeSize; i++)
+        {
+            if ((int)snake.body[0].pos_x == (int)snake.body[i].pos_x && (int)snake.body[0].pos_y == (int)snake.body[i].pos_y)
+            {
+                state.run_State = Game_Run_State.Restart;
+            }
+        }
+		
+    }
 
-	static void render(game_state state, snake snake)
+    public void render()
 	{
-		int tile_size = state.window.width / state.play_field_size;
-		SDL.SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
-		SDL.SDL_RenderClear(state.renderer);
+		int tile_size = renderer.window.width / state.play_field_size;
+		SDL.SDL_SetRenderDrawColor(renderer.ctx, 0, 0, 0, 255);
+		SDL.SDL_RenderClear(renderer.ctx);
 
-		SDL.SDL_Rect tile_rect = new SDL.SDL_Rect();
+        SDL.SDL_Rect tile_rect = new SDL.SDL_Rect();
+		SDL.SDL_Rect texture_rect = new SDL.SDL_Rect();
+
 
 		for (int y = 0; y < state.play_field_size; y++)
-		{
-			for (int x = 0; x < state.play_field_size; x++)
-			{
-				tile_rect.x = x * tile_size;
-				tile_rect.y = y * tile_size;
-				tile_rect.w = tile_size - 1;
-				tile_rect.h = tile_size - 1;
+        {
+            for (int x = 0; x < state.play_field_size; x++)
+            {
+                tile_rect.x = x * tile_size;
+                tile_rect.y = y * tile_size;
+                tile_rect.w = tile_size - 1;
+                tile_rect.h = tile_size - 1;
 
-				switch (state.play_field[y, x])
-				{
-					case Game_Field_Type.Grass:
-						SDL.SDL_SetRenderDrawColor(state.renderer, 1, 70, 52, 255);
-						break;
-					case Game_Field_Type.Apple:
-						SDL.SDL_SetRenderDrawColor(state.renderer, 0, 255, 0, 255);
-						break;
-					case Game_Field_Type.Choco:
-						SDL.SDL_SetRenderDrawColor(state.renderer, 150, 75, 0, 255);
-						break;
-					case Game_Field_Type.Wall:
-						SDL.SDL_SetRenderDrawColor(state.renderer, 126, 126, 126, 255);
-						break;
-					default:
-						break;
-				}
+                texture_rect.x = 64;
+                texture_rect.y = 128;
+                texture_rect.w = 64;
+                texture_rect.h = 64;
+                SDL.SDL_RenderCopy(renderer.ctx, texture_atlas, ref texture_rect, ref tile_rect);
 
-				SDL.SDL_RenderFillRect(state.renderer, ref tile_rect);
-			}
+                if (state.play_field[y, x] == Game_Field_Type.Wall)
+                {
+                    texture_rect.x = 0;
+                    texture_rect.y = 128;
+                    texture_rect.w = 64;
+                    texture_rect.h = 64;
+                    SDL.SDL_RenderCopy(renderer.ctx, texture_atlas, ref texture_rect, ref tile_rect);
+                }
+
+            }
+        }
+
+        if (state.play_field[state.apple.pos_y, state.apple.pos_x] == Game_Field_Type.Apple)
+        {
+            tile_rect.x = state.apple.pos_x * tile_size;
+            tile_rect.y = state.apple.pos_y * tile_size;
+            texture_rect.x = 0;
+            texture_rect.y = 192;
+            texture_rect.w = 64;
+            texture_rect.h = 64;
+            SDL.SDL_RenderCopy(renderer.ctx, texture_atlas, ref texture_rect, ref tile_rect);
+        }
+        if (state.play_field[state.choco.pos_y, state.choco.pos_x] == Game_Field_Type.Choco)
+        {
+			tile_rect.x = state.choco.pos_x * tile_size;
+			tile_rect.y = state.choco.pos_y * tile_size;
+			texture_rect.x = 64;
+			texture_rect.y = 192;
+			texture_rect.w = 64;
+			texture_rect.h = 64;
+			SDL.SDL_RenderCopy(renderer.ctx, texture_atlas, ref texture_rect, ref tile_rect);
 		}
 
-		tile_rect.x = (int)snake.body[0].pos_x * tile_size;
+        tile_rect.x = (int)snake.body[0].pos_x * tile_size;
 		tile_rect.y = (int)snake.body[0].pos_y * tile_size;
-		SDL.SDL_SetRenderDrawColor(state.renderer, 255, 0, 0, 255);
-		SDL.SDL_RenderFillRect(state.renderer, ref tile_rect);
+		SDL.SDL_SetRenderDrawColor(renderer.ctx, 255, 0, 0, 255);
+		SDL.SDL_RenderFillRect(renderer.ctx, ref tile_rect);
 
 		for (int i = 1; i < snake.snakeSize; i++)
 		{
 			tile_rect.x = (int)snake.body[i].pos_x * tile_size;
 			tile_rect.y = (int)snake.body[i].pos_y * tile_size;
-			SDL.SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-			SDL.SDL_RenderFillRect(state.renderer, ref tile_rect);
+			SDL.SDL_SetRenderDrawColor(renderer.ctx, 0, 0, 255, 255);
+			SDL.SDL_RenderFillRect(renderer.ctx, ref tile_rect);
 		}
 
 		/* print_text(0, 3, 255, 255, 255, text, state, (char*)"SCORE %d", state.score);
 			print_text(g_SCREEN_SIZE - 500, 3, 255, 255, 255, text, state, (char*)"FPS %.1f", 1.0f / state.clock.delta_time_s);*/
 
-		SDL.SDL_RenderPresent(state.renderer);
+		SDL.SDL_RenderPresent(renderer.ctx);
 	}
 
-	static void terminate_SDL(game_state state)
+	public void terminate_SDL()
 	{
-		SDL.SDL_DestroyRenderer(state.renderer);
-		SDL.SDL_DestroyWindow(state.window.window_handle);
+		SDL.SDL_DestroyRenderer(renderer.ctx);
+		SDL.SDL_DestroyWindow(renderer.window.window_handle);
 		SDL.SDL_Quit();
 	}
+}
 
+class Program
+{
 	static void Main()
 	{
-		snake snake = new snake(512);
-		game_state state = new game_state(30);
-		state.clock.target_fps = 60;
-		gameplay_setup(state, snake);
-		//game_text text = { };
-		/*   text.glyph_width = 18;
-			text.glyph_height = 28;
-			fonts_init(text, state);*/
-
-		// Initilizes SDL_image for use with png files.
-		if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) == 0)
-		{
-			Console.WriteLine($"There was an issue initilizing SDL2_Image {SDL_image.IMG_GetError()}");
-		}
+		Game game = new Game();
 
 		// Main loop for the program
-		while (state.run_State == Game_Run_State.Running || state.run_State == Game_Run_State.Pause)
+		while (game.state.run_State == Game_Run_State.Running || game.state.run_State == Game_Run_State.Pause)
 		{
 			System.UInt64 tick_start = SDL.SDL_GetPerformanceCounter();
 
-			input_process(state, snake);
+			game.input_process();
 
-			if (state.run_State == Game_Run_State.Quit)
+			if (game.state.run_State == Game_Run_State.Quit)
 			{
 				break;
 			}
-			if (state.run_State != Game_Run_State.Pause)
+			if (game.state.run_State != Game_Run_State.Pause)
 			{
-				update(state, snake);
+				game.update();
 			}
-			if (state.run_State == Game_Run_State.Restart)
+			if (game.state.run_State == Game_Run_State.Restart)
 			{
-				gameplay_setup(state, snake);
+				game.gameplay_setup();
 			}
 
-			render(state, snake);
-			state.clock.clock_update_and_wait(tick_start);
+			game.render();
+			game.state.clock.clock_update_and_wait(tick_start);
 		}
 
-		terminate_SDL(state);
+		game.terminate_SDL();
 	}
 }
